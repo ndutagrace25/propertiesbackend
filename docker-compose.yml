@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  server:
+    build: .
+    volumes:
+      - app:/app
+    networks:
+      - sidehustle 
+    ports:
+      - "5001:5001"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: $DB_HOST
+      DB_NAME: $DB_NAME
+      DB_USER: $DB_USER
+      DB_PASSWORD: $DB_PASSWORD
+      DB_PORT: $DB_PORT
+  db:
+    image: "postgres"
+    environment:
+      POSTGRES_PASSWORD: $DB_PASSWORD
+      POSTGRES_USER: $DB_USER
+      POSTGRES_DATABASE: $DB_NAME
+    volumes:
+      - data:/var/lib/postgresql/data
+    networks:
+      - sidehustle
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $DB_USER -d $DB_NAME"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+
+networks:
+  sidehustle:
+    name: sidehustle
+    driver: bridge    
+volumes:
+  data:
+    driver: local
+  app:
+    driver: local
+
